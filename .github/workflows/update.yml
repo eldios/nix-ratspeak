@@ -1,0 +1,42 @@
+name: Update ratspeak
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/nix-installer-action@v22
+
+      - name: Run update script
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./update.sh
+
+      - name: Read updated version
+        run: |
+          version=$(sed -nE 's/^ *version = "([^"]+)";$/\1/p' package.nix | head -1)
+          echo "RATSPEAK_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: update/ratspeak
+          delete-branch: true
+          sign-commits: true
+          commit-message: "ratspeak: update to ${{ env.RATSPEAK_VERSION }}"
+          title: "ratspeak: update to ${{ env.RATSPEAK_VERSION }}"
+          body: |
+            Automated update to the latest upstream release tag, with the
+            sibling protocol repos pinned to the revisions current at the
+            tag's date. Produced by `update.sh`; the build was verified as
+            part of the run.

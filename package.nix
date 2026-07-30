@@ -105,6 +105,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   doCheck = false;
 
+  passthru.updateScript = ./update.sh;
+
   meta = {
     description = "Reticulum and LXMF client with messaging, file sharing, voice calls and LoRa support";
     homepage = "https://github.com/ratspeak/Ratspeak";

@@ -13,6 +13,15 @@ github_api() {
         "https://api.github.com/$1"
 }
 
+# Works both from the standalone packaging flake and from a nixpkgs checkout.
+build() {
+    if [ -f flake.nix ]; then
+        nix build .#ratspeak
+    else
+        nix-build "$(git rev-parse --show-toplevel)" -A ratspeak --no-out-link
+    fi
+}
+
 prefetch() {
     nix flake prefetch --json "github:ratspeak/$1/$2" | jq -r .hash
 }
@@ -50,7 +59,7 @@ done
 # so it must not trip set -e/pipefail.
 fake="sha256-$(printf 'A%.0s' {1..43})="
 sed -i -E "s|^( *cargoHash = )\".*\";|\1\"$fake\";|" package.nix
-build_log=$(nix build .#ratspeak 2>&1 || true)
+build_log=$(build 2>&1 || true)
 cargo_hash=$(printf '%s\n' "$build_log" | sed -nE 's/^ *got: *(sha256-.*)$/\1/p' | head -1)
 if [ -z "$cargo_hash" ]; then
     echo "error: could not extract cargoHash from build output" >&2
@@ -59,5 +68,5 @@ fi
 sed -i -E "s|^( *cargoHash = )\".*\";|\1\"$cargo_hash\";|" package.nix
 
 echo "verifying build..."
-nix build .#ratspeak
+build
 echo "ratspeak updated to $new"

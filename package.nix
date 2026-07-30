@@ -51,6 +51,7 @@ in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "ratspeak";
   version = "1.0.25";
+  __structuredAttrs = true;
 
   src = fetchFromGitHub {
     owner = "ratspeak";
@@ -102,8 +103,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
       --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ libayatana-appindicator ]}
     )
   '';
-
-  doCheck = false;
 
   passthru.updateScript = ./update.sh;
 
